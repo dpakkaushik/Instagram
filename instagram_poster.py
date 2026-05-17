@@ -13,7 +13,6 @@ Token management:
   - Auto-refreshed when < 7 days remain
 """
 
-import base64
 import json
 import time
 from datetime import datetime, timedelta
@@ -106,17 +105,18 @@ def _get_token() -> str:
 
 def _host_image(image_path: str) -> str:
     """Upload JPEG to imgbb and return a public URL."""
-    with open(image_path, "rb") as f:
-        b64 = base64.b64encode(f.read()).decode()
     key = IMGBB_API_KEY.strip()
-    r = requests.post(
-        "https://api.imgbb.com/1/upload",
-        params={"key": key},
-        data={"image": b64},
-        timeout=30,
-    )
+    file_size = Path(image_path).stat().st_size
+    print(f"  [imgbb] Uploading {image_path} ({file_size/1024:.0f} KB)...")
+    with open(image_path, "rb") as f:
+        r = requests.post(
+            "https://api.imgbb.com/1/upload",
+            params={"key": key},
+            files={"image": ("image.jpg", f, "image/jpeg")},
+            timeout=60,
+        )
     if not r.ok:
-        raise RuntimeError(f"imgbb upload failed ({r.status_code}): {r.text[:300]}")
+        raise RuntimeError(f"imgbb upload failed ({r.status_code}): {r.text[:400]}")
     url = r.json()["data"]["url"]
     print(f"  [imgbb] Hosted: {url[:70]}...")
     return url
