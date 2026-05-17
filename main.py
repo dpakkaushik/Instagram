@@ -16,6 +16,13 @@ import schedule
 
 from config import NEWS_TOPIC, POST_COUNT, POST_INTERVAL_HOURS
 from news_fetcher import fetch_news
+
+def _pick_topic() -> str:
+    topics = [t.strip() for t in NEWS_TOPIC.split(",") if t.strip()]
+    if len(topics) <= 1:
+        return NEWS_TOPIC.strip()
+    idx = (datetime.now().hour // 2) % len(topics)
+    return topics[idx]
 from gemini_processor import summarize_news, generate_background_image
 from image_composer import compose_card
 from instagram_poster import post_image
@@ -28,12 +35,13 @@ DRY_RUN = "--dry" in sys.argv
 
 def run_pipeline() -> None:
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    topic = _pick_topic()
     print(f"\n{'='*56}")
     print(f"  Pipeline started at {ts}")
-    print(f"  Topic: '{NEWS_TOPIC}'  |  Count: {POST_COUNT}  |  Dry: {DRY_RUN}")
+    print(f"  Topic: '{topic}'  |  Count: {POST_COUNT}  |  Dry: {DRY_RUN}")
     print(f"{'='*56}")
 
-    articles = fetch_news(topic=NEWS_TOPIC, count=POST_COUNT)
+    articles = fetch_news(topic=topic, count=POST_COUNT)
     if not articles:
         print("[pipeline] No articles fetched — aborting run")
         return
