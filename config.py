@@ -3,19 +3,23 @@ from dotenv import load_dotenv
 
 load_dotenv(override=False)  # env vars from GitHub Actions take priority
 
-GEMINI_API_KEY      = os.getenv("GEMINI_API_KEY", "")
-GROQ_API_KEY        = os.getenv("GROQ_API_KEY", "")
-INSTAGRAM_USERNAME  = os.getenv("INSTAGRAM_USERNAME", "")
-INSTAGRAM_PASSWORD  = os.getenv("INSTAGRAM_PASSWORD", "")
+def _clean(val: str) -> str:
+    """Strip whitespace and take only the first line (guards against double-paste in GitHub Secrets)."""
+    return val.strip().splitlines()[0].strip() if val.strip() else val
+
+GEMINI_API_KEY      = _clean(os.getenv("GEMINI_API_KEY", ""))
+GROQ_API_KEY        = _clean(os.getenv("GROQ_API_KEY", ""))
+INSTAGRAM_USERNAME  = _clean(os.getenv("INSTAGRAM_USERNAME", ""))
+INSTAGRAM_PASSWORD  = _clean(os.getenv("INSTAGRAM_PASSWORD", ""))
 NEWS_TOPIC          = os.getenv("NEWS_TOPIC", "world news")
 POST_COUNT          = int(os.getenv("POST_COUNT", "5"))
 POST_INTERVAL_HOURS = int(os.getenv("POST_INTERVAL_HOURS", "6"))
 
 # Official Instagram Graph API
-IG_USER_ID      = os.getenv("IG_USER_ID", "")
-IG_ACCESS_TOKEN = os.getenv("IG_ACCESS_TOKEN", "")
-IG_APP_SECRET   = os.getenv("IG_APP_SECRET", "")
-IMGBB_API_KEY   = os.getenv("IMGBB_API_KEY", "")
+IG_USER_ID      = _clean(os.getenv("IG_USER_ID", ""))
+IG_ACCESS_TOKEN = _clean(os.getenv("IG_ACCESS_TOKEN", ""))
+IG_APP_SECRET   = _clean(os.getenv("IG_APP_SECRET", ""))
+IMGBB_API_KEY   = _clean(os.getenv("IMGBB_API_KEY", ""))
 
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY not set in .env — get a free key at https://console.groq.com")
