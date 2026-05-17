@@ -133,6 +133,7 @@ def post_image(image_path: str, caption: str) -> str:
     image_url = _host_image(image_path)
 
     # 2 — Create media container
+    print(f"  [instagram] Posting as user_id={IG_USER_ID}")
     r = requests.post(
         f"{GRAPH}/{IG_USER_ID}/media",
         params={
