@@ -108,13 +108,15 @@ def _host_image(image_path: str) -> str:
     """Upload JPEG to imgbb and return a public URL."""
     with open(image_path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode()
+    key = IMGBB_API_KEY.strip()
     r = requests.post(
         "https://api.imgbb.com/1/upload",
-        params={"key": IMGBB_API_KEY},
+        params={"key": key},
         data={"image": b64},
         timeout=30,
     )
-    r.raise_for_status()
+    if not r.ok:
+        raise RuntimeError(f"imgbb upload failed ({r.status_code}): {r.text[:300]}")
     url = r.json()["data"]["url"]
     print(f"  [imgbb] Hosted: {url[:70]}...")
     return url
