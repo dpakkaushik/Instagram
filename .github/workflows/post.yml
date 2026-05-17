@@ -1,0 +1,43 @@
+name: Post to Instagram
+
+on:
+  schedule:
+    - cron: '0 5 * * *'   # 5 AM UTC = 10:30 AM IST
+    - cron: '0 14 * * *'  # 2 PM UTC = 7:30 PM IST
+  workflow_dispatch:        # manual trigger from GitHub UI
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download fonts
+        run: python setup.py
+
+      - name: Create .env
+        run: |
+          cat > .env << 'EOF'
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+          INSTAGRAM_USERNAME=${{ secrets.INSTAGRAM_USERNAME }}
+          INSTAGRAM_PASSWORD=${{ secrets.INSTAGRAM_PASSWORD }}
+          NEWS_TOPIC=world news
+          POST_COUNT=2
+          POST_INTERVAL_HOURS=12
+          IG_USER_ID=${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN=${{ secrets.IG_ACCESS_TOKEN }}
+          IG_APP_SECRET=${{ secrets.IG_APP_SECRET }}
+          IMGBB_API_KEY=${{ secrets.IMGBB_API_KEY }}
+          EOF
+
+      - name: Run pipeline
+        run: python main.py --once
