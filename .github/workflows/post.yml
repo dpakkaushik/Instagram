@@ -2,7 +2,7 @@ name: Post to Instagram
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # every 2 hours
+    - cron: '*/15 * * * *'  # every 15 minutes
   workflow_dispatch:        # manual trigger from GitHub UI
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROKSECRET }}
           INSTAGRAM_USERNAME: ${{ secrets.INSTAUSERNAMESECRET }}
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAPASSWORDSECRET }}
-          NEWS_TOPIC: "world news,entertainment,sports,technology,science,business,health,politics,space,AI,gaming,environment"
+          NEWS_TOPIC: "entertainment,sports,technology,world news,science,business,health,politics,space,AI,gaming,environment"
           POST_COUNT: "2"
           POST_INTERVAL_HOURS: "12"
           IG_USER_ID: ${{ secrets.IGUSERIDSECRET }}

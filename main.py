@@ -21,7 +21,8 @@ def _pick_topic() -> str:
     topics = [t.strip() for t in NEWS_TOPIC.split(",") if t.strip()]
     if len(topics) <= 1:
         return NEWS_TOPIC.strip()
-    idx = (datetime.now().hour // 2) % len(topics)
+    now = datetime.now()
+    idx = (now.hour * 4 + now.minute // 15) % len(topics)
     return topics[idx]
 from gemini_processor import summarize_news, generate_background_image
 from image_composer import compose_card
