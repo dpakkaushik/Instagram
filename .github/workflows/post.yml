@@ -23,19 +23,17 @@ jobs:
       - name: Download fonts
         run: python setup.py
 
-      - name: Create .env
-        run: |
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
-          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
-          echo "INSTAGRAM_USERNAME=${{ secrets.INSTAGRAM_USERNAME }}" >> .env
-          echo "INSTAGRAM_PASSWORD=${{ secrets.INSTAGRAM_PASSWORD }}" >> .env
-          echo "NEWS_TOPIC=world news" >> .env
-          echo "POST_COUNT=2" >> .env
-          echo "POST_INTERVAL_HOURS=12" >> .env
-          echo "IG_USER_ID=${{ secrets.IG_USER_ID }}" >> .env
-          echo "IG_ACCESS_TOKEN=${{ secrets.IG_ACCESS_TOKEN }}" >> .env
-          echo "IG_APP_SECRET=${{ secrets.IG_APP_SECRET }}" >> .env
-          echo "IMGBB_API_KEY=${{ secrets.IMGBB_API_KEY }}" >> .env
-
       - name: Run pipeline
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          INSTAGRAM_USERNAME: ${{ secrets.INSTAGRAM_USERNAME }}
+          INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
+          NEWS_TOPIC: "world news"
+          POST_COUNT: "2"
+          POST_INTERVAL_HOURS: "12"
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
+          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
         run: python main.py --once
