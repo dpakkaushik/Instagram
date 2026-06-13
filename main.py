@@ -112,6 +112,7 @@ def run_pipeline() -> None:
         print(f"{'!'*60}")
         print(traceback.format_exc())
         print("  Run aborted — no post was made.\n")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
