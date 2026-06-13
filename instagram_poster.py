@@ -208,29 +208,56 @@ def post_image(image_path: str, caption: str) -> str:
 # Post: Reel
 # ---------------------------------------------------------------------------
 
+# Preferred Instagram audio tracks in priority order.
+# If the first is not found in IG's library the API returns an audio-related
+# error and we retry with the next name.  If none match, we post without music.
+_AUDIO_NAMES = [
+    "Don't worry",
+    "Jacob and the Stone",
+    "Thank you for being gentle",
+]
+
+
+def _create_reel_container(token: str, video_url: str, caption: str, audio_name: str | None) -> str:
+    params: dict = {
+        "media_type":   "REELS",
+        "video_url":    video_url,
+        "caption":      caption[:2200],
+        "access_token": token,
+    }
+    if audio_name:
+        params["audio_name"] = audio_name
+
+    r = requests.post(f"{GRAPH}/{IG_USER_ID}/media", params=params, timeout=30)
+    if not r.ok:
+        raise RuntimeError(
+            f"[instagram] Create Reel container failed ({r.status_code}): {r.json()}"
+        )
+    return r.json()["id"]
+
+
 def post_reel(video_path: str, caption: str) -> str:
     token     = _get_token()
     video_url = _host_video(video_path)
 
-    print(f"  [instagram] Creating Reel container (user_id={IG_USER_ID})...")
-    r = requests.post(
-        f"{GRAPH}/{IG_USER_ID}/media",
-        params={
-            "media_type":   "REELS",
-            "video_url":    video_url,
-            "caption":      caption[:2200],
-            "audio_name":   "Don't worry",
-            "access_token": token,
-        },
-        timeout=30,
-    )
-    if not r.ok:
-        raise RuntimeError(
-            f"[instagram] Create Reel container failed ({r.status_code}): {r.json()}\n"
-            "Common causes: expired token, incorrect IG_USER_ID, or video format issue."
-        )
-    container_id = r.json()["id"]
-    print(f"  [instagram] Reel container: {container_id}")
+    # Try each preferred audio name; fall back to no audio if all fail.
+    container_id: str | None = None
+    for audio in _AUDIO_NAMES + [None]:
+        label = f'"{audio}"' if audio else "no audio"
+        print(f"  [instagram] Creating Reel container — audio: {label}...")
+        try:
+            container_id = _create_reel_container(token, video_url, caption, audio)
+            print(f"  [instagram] Reel container: {container_id}")
+            break
+        except RuntimeError as exc:
+            err_text = str(exc).lower()
+            if "audio" in err_text and audio is not None:
+                print(f"  [instagram] Audio {label} not accepted → trying next...")
+                continue
+            raise  # non-audio error — propagate immediately
+
+    if container_id is None:
+        raise RuntimeError("[instagram] Could not create Reel container with any audio option")
 
     # Video processing takes longer than photos — poll up to 5 minutes
     for attempt in range(30):
