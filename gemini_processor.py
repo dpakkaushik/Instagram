@@ -17,6 +17,7 @@ from image_composer import make_gradient_bg
 _gemini = genai.Client(api_key=GEMINI_API_KEY)
 _groq   = Groq(api_key=GROQ_API_KEY)
 
+GEMINI_TEXT_MODEL = "gemini-2.5-flash"
 GROQ_TEXT_MODEL   = "llama-3.3-70b-versatile"
 IMAGEN_MODEL      = "imagen-3.0-generate-002"
 QUOTE_PROMPT_FILE = Path("prompts/quote_prompt.txt")
@@ -27,19 +28,43 @@ CANVAS_W, CANVAS_H = 1080, 1350
 
 
 # ---------------------------------------------------------------------------
-# Call 1 — Quote generation (Groq — free tier, 14 400 req/day)
+# Call 1 — Quote generation (Gemini 2.5 Flash primary → Groq fallback)
 # ---------------------------------------------------------------------------
+
+def _parse_quote_json(raw: str, source: str) -> dict:
+    raw = re.sub(r"^```[a-z]*\n?", "", raw).strip()
+    raw = re.sub(r"\n?```$", "", raw).strip()
+    data = json.loads(raw)
+    required = {"slide_1", "slide_2", "slide_3", "slide_4", "caption", "hashtags", "mood", "visual_theme"}
+    missing = required - data.keys()
+    if missing:
+        raise ValueError(f"[{source}] Missing fields: {missing} | Raw: {raw[:200]}")
+    return data
+
 
 def generate_carousel(category: str) -> dict:
     """
-    Ask Groq/Llama to write a 4-slide viral Instagram quote for the given category.
-    Returns dict with keys: slide_1..4, caption, hashtags, mood, visual_theme.
-    Raises RuntimeError on failure — caller must abort the run.
+    Generate 4-slide quote. Tries Gemini 2.5 Flash first, falls back to Groq.
+    Raises RuntimeError only if both fail.
     """
     base_prompt = QUOTE_PROMPT_FILE.read_text().strip()
     full_prompt = f"Category / mood for today: {category}\n\n{base_prompt}"
 
-    print(f"  [groq] Calling {GROQ_TEXT_MODEL} for quote generation...")
+    # ── Primary: Gemini 2.5 Flash ────────────────────────────────────
+    print(f"  [gemini] Calling {GEMINI_TEXT_MODEL} for quote generation...")
+    try:
+        response = _gemini.models.generate_content(
+            model=GEMINI_TEXT_MODEL,
+            contents=full_prompt,
+        )
+        data = _parse_quote_json(response.text.strip(), "gemini")
+        print(f"  [gemini] Quote OK")
+        return data
+    except Exception as exc:
+        print(f"  [gemini] Failed ({exc.__class__.__name__}: {str(exc)[:120]}) → falling back to Groq...")
+
+    # ── Fallback: Groq ───────────────────────────────────────────────
+    print(f"  [groq] Calling {GROQ_TEXT_MODEL}...")
     try:
         response = _groq.chat.completions.create(
             model=GROQ_TEXT_MODEL,
@@ -47,25 +72,14 @@ def generate_carousel(category: str) -> dict:
             temperature=0.9,
             max_tokens=1024,
         )
-        raw = response.choices[0].message.content.strip()
-        raw = re.sub(r"^```[a-z]*\n?", "", raw)
-        raw = re.sub(r"\n?```$", "", raw)
-        data = json.loads(raw.strip())
+        data = _parse_quote_json(response.choices[0].message.content.strip(), "groq")
+        print(f"  [groq] Quote OK")
+        return data
     except Exception as exc:
         raise RuntimeError(
-            f"[groq] Quote generation failed: {type(exc).__name__}: {exc}\n"
-            "Check GROQ_API_KEY at https://console.groq.com/keys"
+            f"[groq] Quote generation also failed: {exc}\n"
+            "Check GROQ_API_KEY and GEMINI_API_KEY."
         ) from exc
-
-    required = {"slide_1", "slide_2", "slide_3", "slide_4", "caption", "hashtags", "mood", "visual_theme"}
-    missing = required - data.keys()
-    if missing:
-        raise RuntimeError(
-            f"[groq] Quote response missing fields: {missing}\n"
-            f"Raw response was: {raw[:300]}"
-        )
-
-    return data
 
 
 # ---------------------------------------------------------------------------
