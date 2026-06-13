@@ -53,11 +53,13 @@ def compose_reel(image_paths: list[str], output_path: str, duration: float | Non
         music_path = _pick_music()
         if music_path:
             try:
-                audio = (
-                    AudioFileClip(music_path)
-                    .subclip(0, video.duration)
-                    .audio_fadeout(1.0)
-                )
+                from moviepy.audio.AudioClip import concatenate_audioclips
+                audio = AudioFileClip(music_path)
+                # Loop audio if shorter than video
+                if audio.duration < video.duration:
+                    loops = int(video.duration / audio.duration) + 1
+                    audio = concatenate_audioclips([audio] * loops)
+                audio = audio.subclip(0, video.duration).audio_fadeout(1.0)
                 video = video.set_audio(audio)
             except Exception as exc:
                 print(f"  [video] WARNING: Could not load music ({exc}) — posting silent")
