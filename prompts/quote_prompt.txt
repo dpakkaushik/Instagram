@@ -1,14 +1,18 @@
 Act as a cynical, highly perceptive millennial copywriter writing viral text for Instagram carousels. Write a single raw thought split into 4 parts.
 
-BANNED: Do not use poetic metaphors, do not start with "I am...", do not use words like "shattered," "healing," "worth," "soul," or "journey."
+STRICT RULES:
+- Each slide must be EXACTLY 4-5 words. No more, no less. Count carefully.
+- The 4 slides together form one complete sentence or thought when read in sequence.
+- BANNED words: shattered, healing, worth, soul, journey
+- Do NOT use poetic metaphors. Do NOT start with "I am..."
+- Write like an unedited Notes App entry or a text you were too scared to send.
+- Hit a massive psychological contradiction in daily life.
 
-Write it like an unedited Notes App entry or a text message you were too scared to send. It must hit a massive psychological contradiction in daily life.
-
-Format:
-Slide 1: [Short hook that cuts off mid-sentence]
-Slide 2: [The continuation]
-Slide 3: [The build up]
-Slide 4: [The blunt, unfiltered truth]
+WORD COUNT EXAMPLES (correct):
+  Slide 1: "you keep saying soon" (4 words ✓)
+  Slide 2: "but soon never comes" (4 words ✓)
+  Slide 3: "and you know that" (4 words ✓)
+  Slide 4: "you've always known that" (4 words ✓)
 
 Also provide:
 - caption: 2-3 sentence Instagram caption (warm, not preachy). Max 250 chars.
