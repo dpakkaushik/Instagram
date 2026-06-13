@@ -18,8 +18,7 @@ import schedule
 from config import QUOTE_CATEGORY, POST_INTERVAL_HOURS
 from gemini_processor import generate_carousel, generate_slide_backgrounds
 from image_composer import compose_card
-from video_composer import compose_reel
-from instagram_poster import post_reel
+from instagram_poster import post_carousel
 
 OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -58,12 +57,11 @@ def run_pipeline() -> None:
         print(f"  Theme      : {carousel['visual_theme']}")
 
         # ── STEP 2: Generate slide backgrounds ───────────────────────
-        print("\n[2/5] Generating backgrounds (Imagen 3 — 4 calls)...")
+        print("\n[2/4] Generating backgrounds...")
         bg_images = generate_slide_backgrounds(carousel)
-        print(f"  All 4 backgrounds generated successfully")
 
         # ── STEP 3: Compose slide cards ──────────────────────────────
-        print("\n[3/5] Composing slide cards...")
+        print("\n[3/4] Composing slide cards...")
         image_paths = []
         slide_keys  = ["slide_1", "slide_2", "slide_3", "slide_4"]
 
@@ -80,24 +78,19 @@ def run_pipeline() -> None:
             image_paths.append(str(path))
             print(f"  Slide {i}/4 saved: {path.name}")
 
-        # ── STEP 4: Compose Reel video ───────────────────────────────
-        print("\n[4/5] Composing Reel video (moviepy)...")
-        reel_path = str(OUTPUT_DIR / f"reel_{run_id}.mp4")
-        compose_reel(image_paths, reel_path)
-
-        # ── STEP 5: Post ─────────────────────────────────────────────
+        # ── STEP 4: Post ─────────────────────────────────────────────
         ig_caption = (
             f"{carousel['caption']}\n\n"
             f"{carousel['hashtags']}"
         )
 
         if DRY_RUN:
-            print("\n[5/5] DRY RUN — skipping post")
+            print("\n[4/4] DRY RUN — skipping post")
             print(f"  Caption preview:\n  {ig_caption[:200]}")
             print(f"\n  Output files in: {OUTPUT_DIR.resolve()}")
         else:
-            print("\n[5/5] Posting Reel to Instagram...")
-            url = post_reel(reel_path, ig_caption)
+            print("\n[4/4] Posting carousel to Instagram...")
+            url = post_carousel(image_paths, ig_caption)
             print(f"\n  POSTED: {url}")
 
         print(f"\n{'='*60}")

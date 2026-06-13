@@ -294,3 +294,84 @@ def post_reel(video_path: str, caption: str) -> str:
     url = f"https://www.instagram.com/{INSTAGRAM_USERNAME}/"
     print(f"[instagram] Reel live -> {url}")
     return url
+
+
+# ---------------------------------------------------------------------------
+# Post: Carousel (4 images — viewers swipe manually)
+# ---------------------------------------------------------------------------
+
+def post_carousel(image_paths: list, caption: str) -> str:
+    token = _get_token()
+
+    # Step 1 — upload each image and create a carousel item container
+    item_ids = []
+    for i, path in enumerate(image_paths, 1):
+        image_url = _host_image(path)
+        print(f"  [instagram] Creating item container {i}/{len(image_paths)}...")
+        r = requests.post(
+            f"{GRAPH}/{IG_USER_ID}/media",
+            params={
+                "image_url":        image_url,
+                "is_carousel_item": "true",
+                "access_token":     token,
+            },
+            timeout=30,
+        )
+        if not r.ok:
+            raise RuntimeError(
+                f"[instagram] Carousel item {i} failed ({r.status_code}): {r.json()}"
+            )
+        item_ids.append(r.json()["id"])
+        print(f"  [instagram] Item {i} container: {r.json()['id']}")
+
+    # Step 2 — create the carousel container
+    print(f"  [instagram] Creating CAROUSEL container ({len(item_ids)} items)...")
+    r = requests.post(
+        f"{GRAPH}/{IG_USER_ID}/media",
+        params={
+            "media_type":   "CAROUSEL",
+            "children":     ",".join(item_ids),
+            "caption":      caption[:2200],
+            "access_token": token,
+        },
+        timeout=30,
+    )
+    if not r.ok:
+        raise RuntimeError(
+            f"[instagram] Create CAROUSEL container failed ({r.status_code}): {r.json()}"
+        )
+    container_id = r.json()["id"]
+    print(f"  [instagram] CAROUSEL container: {container_id}")
+
+    # Step 3 — poll until processing finishes
+    for attempt in range(20):
+        time.sleep(5)
+        status_data = requests.get(
+            f"{GRAPH}/{container_id}",
+            params={"fields": "status_code", "access_token": token},
+            timeout=10,
+        ).json()
+        status = status_data.get("status_code", "IN_PROGRESS")
+        print(f"  [instagram] Carousel status: {status} (attempt {attempt + 1}/20)")
+        if status == "FINISHED":
+            break
+        if status == "ERROR":
+            raise RuntimeError(
+                f"[instagram] Carousel processing failed: {status_data}"
+            )
+    else:
+        raise RuntimeError("[instagram] Carousel processing timed out after 100s")
+
+    # Step 4 — publish
+    r = requests.post(
+        f"{GRAPH}/{IG_USER_ID}/media_publish",
+        params={"creation_id": container_id, "access_token": token},
+        timeout=30,
+    )
+    if not r.ok:
+        raise RuntimeError(
+            f"[instagram] Publish CAROUSEL failed ({r.status_code}): {r.json()}"
+        )
+    url = f"https://www.instagram.com/{INSTAGRAM_USERNAME}/"
+    print(f"[instagram] Carousel live -> {url}")
+    return url
