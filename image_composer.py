@@ -88,6 +88,23 @@ def _draw_brand(d: ImageDraw.ImageDraw) -> None:
     d.text(((CANVAS[0] - tw) // 2, 28), label, font=font, fill=(200, 200, 200, 180))
 
 
+def make_gradient_bg(category: str) -> Image.Image:
+    """Generate a rich dark-to-accent diagonal gradient background."""
+    accent = CATEGORY_COLORS.get(category.lower(), DEFAULT_ACCENT)
+    img = Image.new("RGB", CANVAS)
+    pixels = img.load()
+    w, h = CANVAS
+    dark = (12, 12, 20)
+    for y in range(h):
+        for x in range(w):
+            t = (x / w * 0.4 + y / h * 0.6)
+            r = int(dark[0] + (accent[0] - dark[0]) * t * 0.6)
+            g = int(dark[1] + (accent[1] - dark[1]) * t * 0.6)
+            b = int(dark[2] + (accent[2] - dark[2]) * t * 0.6)
+            pixels[x, y] = (max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b)))
+    return img
+
+
 def compose_card(
     slide_text: str,
     slide_num: int,

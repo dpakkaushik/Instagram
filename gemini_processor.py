@@ -1,17 +1,15 @@
 import json
 import re
-import time
-import urllib.parse
 from io import BytesIO
 from pathlib import Path
 
-import requests
 from google import genai
 from google.genai import types
 from groq import Groq
 from PIL import Image
 
 from config import GEMINI_API_KEY, GROQ_API_KEY
+from image_composer import make_gradient_bg
 
 _gemini = genai.Client(api_key=GEMINI_API_KEY)
 _groq   = Groq(api_key=GROQ_API_KEY)
@@ -71,39 +69,19 @@ def generate_carousel(category: str) -> dict:
 # Call 2 — Image generation (Imagen 3 primary, Pollinations.ai fallback)
 # ---------------------------------------------------------------------------
 
-def _pollinations_image(prompt: str, slide_num: int) -> Image.Image:
-    """Fetch image from Pollinations.ai with 3 retries. Raises RuntimeError on total failure."""
-    encoded = urllib.parse.quote(prompt[:500])
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width=1080&height=1350&nologo=true&seed={slide_num}"
-    for attempt in range(1, 4):
-        try:
-            print(f"    [pollinations] Attempt {attempt}/3...")
-            r = requests.get(url, timeout=120)
-            ct = r.headers.get("content-type", "")
-            if r.status_code == 200 and "image" in ct:
-                img = Image.open(BytesIO(r.content)).convert("RGB")
-                img = img.resize((CANVAS_W, CANVAS_H), Image.LANCZOS)
-                return img
-            print(f"    [pollinations] Bad response: {r.status_code} {ct}")
-        except Exception as e:
-            print(f"    [pollinations] Error: {e}")
-        if attempt < 3:
-            time.sleep(10)
-    raise RuntimeError(f"[pollinations] All 3 attempts failed for slide {slide_num}.")
-
-
 def generate_slide_backgrounds(carousel: dict) -> list:
     """
-    Try Imagen 3 for each slide; fall back to Pollinations.ai if Imagen is unavailable.
-    Raises RuntimeError if both fail for any slide — no partial posts.
+    Try Imagen 3 for each slide; fall back to gradient background if Imagen is unavailable.
+    Always succeeds — gradient is a guaranteed fallback.
     Returns list of 4 PIL Images (1080×1350).
     """
     template = IMAGE_PROMPT_FILE.read_text().strip()
-    images = []
+    category  = carousel.get("mood", "mindset")
+    images    = []
 
     for i, slide_key in enumerate(["slide_1", "slide_2", "slide_3", "slide_4"], 1):
         slide_text = carousel[slide_key]
-        prompt = template.replace("[INSERT SLIDE TEXT HERE]", slide_text)
+        prompt     = template.replace("[INSERT SLIDE TEXT HERE]", slide_text)
 
         print(f"  [imagen] Generating image for slide {i}/4...")
         img = None
@@ -124,13 +102,12 @@ def generate_slide_backgrounds(carousel: dict) -> list:
             img = img.resize((CANVAS_W, CANVAS_H), Image.LANCZOS)
             print(f"  [imagen] Slide {i} OK via Imagen 3")
         except Exception as exc:
-            print(f"  [imagen] Imagen 3 unavailable for slide {i}: {exc}")
-            print(f"  [imagen] Falling back to Pollinations.ai...")
+            print(f"  [imagen] Imagen 3 unavailable ({exc.__class__.__name__}): falling back to gradient")
 
-        # ── Fallback: Pollinations.ai ────────────────────────────────
+        # ── Fallback: gradient background ────────────────────────────
         if img is None:
-            img = _pollinations_image(prompt, i)
-            print(f"  [pollinations] Slide {i} OK via Pollinations.ai")
+            img = make_gradient_bg(carousel.get("mood", "mindset"))
+            print(f"  [gradient] Slide {i} OK — using category gradient")
 
         images.append(img)
 
