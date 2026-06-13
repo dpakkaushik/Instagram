@@ -1,8 +1,11 @@
 import json
 import re
+import time
+import urllib.parse
 from io import BytesIO
 from pathlib import Path
 
+import requests
 from google import genai
 from google.genai import types
 from groq import Groq
@@ -65,15 +68,35 @@ def generate_carousel(category: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Call 2 — Image generation (4 Imagen 3 calls, one per slide)
+# Call 2 — Image generation (Imagen 3 primary, Pollinations.ai fallback)
 # ---------------------------------------------------------------------------
+
+def _pollinations_image(prompt: str, slide_num: int) -> Image.Image:
+    """Fetch image from Pollinations.ai with 3 retries. Raises RuntimeError on total failure."""
+    encoded = urllib.parse.quote(prompt[:500])
+    url = f"https://image.pollinations.ai/prompt/{encoded}?width=1080&height=1350&nologo=true&seed={slide_num}"
+    for attempt in range(1, 4):
+        try:
+            print(f"    [pollinations] Attempt {attempt}/3...")
+            r = requests.get(url, timeout=120)
+            ct = r.headers.get("content-type", "")
+            if r.status_code == 200 and "image" in ct:
+                img = Image.open(BytesIO(r.content)).convert("RGB")
+                img = img.resize((CANVAS_W, CANVAS_H), Image.LANCZOS)
+                return img
+            print(f"    [pollinations] Bad response: {r.status_code} {ct}")
+        except Exception as e:
+            print(f"    [pollinations] Error: {e}")
+        if attempt < 3:
+            time.sleep(10)
+    raise RuntimeError(f"[pollinations] All 3 attempts failed for slide {slide_num}.")
+
 
 def generate_slide_backgrounds(carousel: dict) -> list:
     """
-    Generate one Imagen 3 image per slide using the image prompt template.
-    Each slide's text is inserted into the template individually for maximum relevance.
+    Try Imagen 3 for each slide; fall back to Pollinations.ai if Imagen is unavailable.
+    Raises RuntimeError if both fail for any slide — no partial posts.
     Returns list of 4 PIL Images (1080×1350).
-    Raises RuntimeError on any failure — caller must abort the run (no partial posts).
     """
     template = IMAGE_PROMPT_FILE.read_text().strip()
     images = []
@@ -83,6 +106,9 @@ def generate_slide_backgrounds(carousel: dict) -> list:
         prompt = template.replace("[INSERT SLIDE TEXT HERE]", slide_text)
 
         print(f"  [imagen] Generating image for slide {i}/4...")
+        img = None
+
+        # ── Primary: Imagen 3 ────────────────────────────────────────
         try:
             response = _gemini.models.generate_images(
                 model=IMAGEN_MODEL,
@@ -96,14 +122,16 @@ def generate_slide_backgrounds(carousel: dict) -> list:
             image_bytes = response.generated_images[0].image.image_bytes
             img = Image.open(BytesIO(image_bytes)).convert("RGB")
             img = img.resize((CANVAS_W, CANVAS_H), Image.LANCZOS)
-            print(f"  [imagen] Slide {i} OK ({img.size[0]}x{img.size[1]})")
-            images.append(img)
-
+            print(f"  [imagen] Slide {i} OK via Imagen 3")
         except Exception as exc:
-            raise RuntimeError(
-                f"[imagen] Failed on slide {i} ({slide_key}): {type(exc).__name__}: {exc}\n"
-                "Check that Imagen 3 is enabled on your Gemini API account (billing required). "
-                "No partial post will be made."
-            ) from exc
+            print(f"  [imagen] Imagen 3 unavailable for slide {i}: {exc}")
+            print(f"  [imagen] Falling back to Pollinations.ai...")
+
+        # ── Fallback: Pollinations.ai ────────────────────────────────
+        if img is None:
+            img = _pollinations_image(prompt, i)
+            print(f"  [pollinations] Slide {i} OK via Pollinations.ai")
+
+        images.append(img)
 
     return images
