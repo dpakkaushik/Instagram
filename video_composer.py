@@ -30,9 +30,10 @@ def _pick_music() -> str | None:
     return str(chosen)
 
 
-def compose_reel(image_paths: list[str], output_path: str) -> str:
+def compose_reel(image_paths: list[str], output_path: str, duration: float | None = None) -> str:
     """
     Build output_path MP4 from image_paths.
+    duration overrides SLIDE_DURATION per slide when provided.
     Raises RuntimeError on failure so the caller can abort cleanly.
     """
     try:
@@ -43,9 +44,10 @@ def compose_reel(image_paths: list[str], output_path: str) -> str:
             f"Original error: {exc}"
         ) from exc
 
-    print(f"  [video] Composing {len(image_paths)} slides × {SLIDE_DURATION}s each...")
+    slide_dur = duration if duration is not None else SLIDE_DURATION
+    print(f"  [video] Composing {len(image_paths)} slide(s) × {slide_dur}s each...")
     try:
-        clips = [ImageClip(p).set_duration(SLIDE_DURATION) for p in image_paths]
+        clips = [ImageClip(p).set_duration(slide_dur) for p in image_paths]
         video = concatenate_videoclips(clips, method="compose")
 
         music_path = _pick_music()

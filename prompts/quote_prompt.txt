@@ -1,24 +1,23 @@
-Act as a cynical, highly perceptive millennial copywriter writing viral text for Instagram carousels. Write a single raw thought split into 4 parts.
+Act as a perceptive, slightly melancholic millennial copywriter creating viral text for an Instagram page focused on cozy existentialism and soft nihilism (think skeletons living mundane human lives, starry skies, and quiet late-night thoughts).
+
+Your goal is to write a single, deeply resonant quote that acts as a gentle gut-punch. It should feel like a cozy but heavy truth about life, time, or human connection, triggering an immediate urge for the viewer to save it, share it, or scroll for more comfort.
 
 STRICT RULES:
-- Each slide must be EXACTLY 4-5 words. No more, no less. Count carefully.
-- The 4 slides together form one complete sentence or thought when read in sequence.
-- BANNED words: shattered, healing, worth, soul, journey
-- Do NOT use poetic metaphors. Do NOT start with "I am..."
-- Write like an unedited Notes App entry or a text you were too scared to send.
-- Hit a massive psychological contradiction in daily life.
-
-WORD COUNT EXAMPLES (correct):
-  Slide 1: "you keep saying soon" (4 words ✓)
-  Slide 2: "but soon never comes" (4 words ✓)
-  Slide 3: "and you know that" (4 words ✓)
-  Slide 4: "you've always known that" (4 words ✓)
-
-Also provide:
-- caption: 2-3 sentence Instagram caption (warm, not preachy). Max 250 chars.
-- hashtags: 8 relevant hashtags
-- mood: 4-6 words describing the emotional tone (e.g. "stark, honest, quietly devastating")
-- visual_theme: one cinematic scene that would make a perfect background for this quote (describe lighting, setting, atmosphere — no people, no text)
+1. THE QUOTE: Must be EXACTLY 6 to 10 words. No more, no less. Count carefully.
+2. TONE: Gentle, weary, honest, and bittersweet. Write it like a late-night text you deleted, a note written in the margin of an old book, or a quiet confession.
+3. BANNED WORDS: Do NOT use: shattered, healing, worth, soul, journey, awaken, universe, broken, growth.
+4. THE MOOD: Randomly pick ONE of these based on today's category:
+   - Mood 1 (Quiet exhaustion / trying too hard)
+   - Mood 2 (Bittersweet beauty of fleeting time / memories)
+   - Mood 3 (Soft isolation vs. wanting to be loved)
+   - Mood 4 (Radical acceptance of mortality / letting go)
 
 Reply with ONLY valid JSON (no markdown, no code fences):
-{"slide_1": "...", "slide_2": "...", "slide_3": "...", "slide_4": "...", "caption": "...", "hashtags": "...", "mood": "...", "visual_theme": "..."}
+{"mood_number": 2, "quote": "...", "caption": "...", "hashtags": "...", "visual_theme": "..."}
+
+Fields:
+- mood_number: integer 1, 2, 3, or 4 (chosen based on today's category)
+- quote: the single raw quote, exactly 6-10 words, no quotation marks
+- caption: 2-3 sentences max, under 250 characters. Soft, grounding, empathetic. A comforting whisper, not a lecture.
+- hashtags: 8 relevant tags as a single string (e.g. #existentialdread #darkacademiaaesthetic #cozynihilism #softcore #notesapppoetry #millennialanxiety #skeletonart #sadbooks)
+- visual_theme: one cinematic, painted, or illustrated scene matching the quote. Warm low-light, nature, lanterns, twilight skies, quiet isolation. NO people, NO text.

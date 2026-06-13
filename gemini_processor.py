@@ -19,10 +19,11 @@ def _parse_quote_json(raw: str, source: str) -> dict:
     raw = re.sub(r"^```[a-z]*\n?", "", raw).strip()
     raw = re.sub(r"\n?```$", "", raw).strip()
     data = json.loads(raw)
-    required = {"slide_1", "slide_2", "slide_3", "slide_4", "caption", "hashtags", "mood", "visual_theme"}
+    required = {"mood_number", "quote", "caption", "hashtags", "visual_theme"}
     missing = required - data.keys()
     if missing:
         raise ValueError(f"[{source}] Missing fields: {missing} | Raw: {raw[:200]}")
+    data["mood_number"] = int(data["mood_number"])
     return data
 
 

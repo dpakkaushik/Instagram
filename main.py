@@ -19,7 +19,7 @@ from PIL import Image
 
 from config import QUOTE_CATEGORY, POST_INTERVAL_HOURS
 from gemini_processor import generate_carousel
-from image_composer import compose_card
+from image_composer import compose_card, make_gradient_bg
 from video_composer import compose_reel
 from instagram_poster import post_reel
 
@@ -29,6 +29,8 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 TEMPLATE_DIR.mkdir(exist_ok=True)
 
 DRY_RUN = "--dry" in sys.argv
+
+REEL_DURATION = 10.0   # seconds — single image Reel
 
 
 def _pick_category() -> str:
@@ -40,15 +42,15 @@ def _pick_category() -> str:
     return categories[idx]
 
 
-def _pick_template(mood: str) -> Image.Image:
-    """Pick a random template image whose filename starts with the mood label."""
-    mood_lower = mood.lower()
+def _pick_template(mood_number: int) -> Image.Image:
+    """Pick a random template image labelled with the mood number."""
+    prefix = f"mood{mood_number}"
     candidates = (
-        list(TEMPLATE_DIR.glob(f"{mood_lower}_*.jpg"))
-        + list(TEMPLATE_DIR.glob(f"{mood_lower}_*.jpeg"))
-        + list(TEMPLATE_DIR.glob(f"{mood_lower}_*.png"))
-        + list(TEMPLATE_DIR.glob(f"{mood_lower}/*.jpg"))
-        + list(TEMPLATE_DIR.glob(f"{mood_lower}/*.png"))
+        list(TEMPLATE_DIR.glob(f"{prefix}_*.jpg"))
+        + list(TEMPLATE_DIR.glob(f"{prefix}_*.jpeg"))
+        + list(TEMPLATE_DIR.glob(f"{prefix}_*.png"))
+        + list(TEMPLATE_DIR.glob(f"{prefix}/*.jpg"))
+        + list(TEMPLATE_DIR.glob(f"{prefix}/*.png"))
     )
     if not candidates:
         # Fall back to any image in templates/
@@ -58,10 +60,9 @@ def _pick_template(mood: str) -> Image.Image:
             + list(TEMPLATE_DIR.glob("*.png"))
         )
     if not candidates:
-        raise RuntimeError(
-            f"No template images found in {TEMPLATE_DIR}/\n"
-            f"Add images named like '{mood_lower}_01.jpg' to the templates/ folder."
-        )
+        print(f"  No templates found — using gradient background")
+        return make_gradient_bg(mood_number)
+
     chosen = random.choice(candidates)
     print(f"  Template : {chosen.name}")
     return Image.open(chosen).convert("RGB")
@@ -78,41 +79,35 @@ def run_pipeline() -> None:
     print(f"{'='*60}")
 
     try:
-        # ── STEP 1: Generate 4-slide quote ───────────────────────────
+        # ── STEP 1: Generate quote ────────────────────────────────────
         print("\n[1/4] Generating quote...")
-        carousel = generate_carousel(category)
-        print(f"  Mood    : {carousel['mood']}")
-        print(f"  Slide 1 : {carousel['slide_1']}")
-        print(f"  Slide 2 : {carousel['slide_2']}")
-        print(f"  Slide 3 : {carousel['slide_3']}")
-        print(f"  Slide 4 : {carousel['slide_4']}")
+        data = generate_carousel(category)
+        mood_number = data["mood_number"]
+        quote       = data["quote"]
+        print(f"  Mood #{mood_number} : {data.get('visual_theme', '')[:60]}")
+        print(f"  Quote    : {quote}")
 
-        # ── STEP 2: Pick template image for this mood ─────────────────
-        print("\n[2/4] Picking template image...")
-        bg_image = _pick_template(category)
+        # ── STEP 2: Pick template image ───────────────────────────────
+        print(f"\n[2/4] Picking Mood {mood_number} template...")
+        bg_image = _pick_template(mood_number)
 
-        # ── STEP 3: Compose slide cards ──────────────────────────────
-        print("\n[3/4] Composing slides...")
-        image_paths = []
-        for i, key in enumerate(["slide_1", "slide_2", "slide_3", "slide_4"], 1):
-            card = compose_card(
-                slide_text   = carousel[key],
-                slide_num    = i,
-                total_slides = 4,
-                bg_image     = bg_image,
-                category     = category,
-            )
-            path = OUTPUT_DIR / f"slide_{run_id}_{i:02d}.jpg"
-            card.save(str(path), "JPEG", quality=95)
-            image_paths.append(str(path))
-            print(f"  Slide {i}/4 saved: {path.name}")
+        # ── STEP 3: Compose card ──────────────────────────────────────
+        print("\n[3/4] Composing card...")
+        card = compose_card(
+            quote       = quote,
+            mood_number = mood_number,
+            bg_image    = bg_image,
+        )
+        card_path = str(OUTPUT_DIR / f"card_{run_id}.jpg")
+        card.save(card_path, "JPEG", quality=95)
+        print(f"  Saved: {Path(card_path).name}")
 
         # ── STEP 4: Compose Reel + post ──────────────────────────────
-        ig_caption = f"{carousel['caption']}\n\n{carousel['hashtags']}"
+        ig_caption = f"{data['caption']}\n\n{data['hashtags']}"
         reel_path  = str(OUTPUT_DIR / f"reel_{run_id}.mp4")
 
         print("\n[4/4] Composing Reel video...")
-        compose_reel(image_paths, reel_path)
+        compose_reel([card_path], reel_path, duration=REEL_DURATION)
 
         if DRY_RUN:
             print("\n  DRY RUN — skipping post")
