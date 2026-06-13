@@ -30,7 +30,7 @@ jobs:
       - name: Run pipeline
         env:
           GEMINI_API_KEY:           ${{ secrets.GEMINISECRET }}
-          GROQ_API_KEY:             ${{ secrets.GROQAPIKEY }}
+          GROQ_API_KEY:             ${{ secrets.GROKSECRET }}
           INSTAGRAM_USERNAME:       ${{ secrets.INSTAUSERNAMESECRET }}
           QUOTE_CATEGORY:           "mindset,growth,love,resilience,courage,success,peace,wisdom"
           POST_INTERVAL_HOURS:      "1"
