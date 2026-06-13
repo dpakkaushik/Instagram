@@ -5,55 +5,59 @@ from pathlib import Path
 
 from google import genai
 from google.genai import types
+from groq import Groq
 from PIL import Image
 
-from config import GEMINI_API_KEY
+from config import GEMINI_API_KEY, GROQ_API_KEY
 
 _gemini = genai.Client(api_key=GEMINI_API_KEY)
+_groq   = Groq(api_key=GROQ_API_KEY)
 
-GEMINI_TEXT_MODEL  = "gemini-2.0-flash"
-IMAGEN_MODEL       = "imagen-3.0-generate-002"
-QUOTE_PROMPT_FILE  = Path("prompts/quote_prompt.txt")
-IMAGE_PROMPT_FILE  = Path("prompts/image_prompt.txt")
+GROQ_TEXT_MODEL   = "llama-3.3-70b-versatile"
+IMAGEN_MODEL      = "imagen-3.0-generate-002"
+QUOTE_PROMPT_FILE = Path("prompts/quote_prompt.txt")
+IMAGE_PROMPT_FILE = Path("prompts/image_prompt.txt")
 
 # Output canvas size: 4:5 portrait (1080×1350)
 CANVAS_W, CANVAS_H = 1080, 1350
 
 
 # ---------------------------------------------------------------------------
-# Call 1 — Quote generation
+# Call 1 — Quote generation (Groq — free tier, 14 400 req/day)
 # ---------------------------------------------------------------------------
 
 def generate_carousel(category: str) -> dict:
     """
-    Ask Gemini to write a 4-slide viral Instagram quote for the given category.
+    Ask Groq/Llama to write a 4-slide viral Instagram quote for the given category.
     Returns dict with keys: slide_1..4, caption, hashtags, mood, visual_theme.
     Raises RuntimeError on failure — caller must abort the run.
     """
     base_prompt = QUOTE_PROMPT_FILE.read_text().strip()
     full_prompt = f"Category / mood for today: {category}\n\n{base_prompt}"
 
-    print(f"  [gemini] Calling {GEMINI_TEXT_MODEL} for quote generation...")
+    print(f"  [groq] Calling {GROQ_TEXT_MODEL} for quote generation...")
     try:
-        response = _gemini.models.generate_content(
-            model=GEMINI_TEXT_MODEL,
-            contents=full_prompt,
+        response = _groq.chat.completions.create(
+            model=GROQ_TEXT_MODEL,
+            messages=[{"role": "user", "content": full_prompt}],
+            temperature=0.9,
+            max_tokens=1024,
         )
-        raw = response.text.strip()
+        raw = response.choices[0].message.content.strip()
         raw = re.sub(r"^```[a-z]*\n?", "", raw)
         raw = re.sub(r"\n?```$", "", raw)
         data = json.loads(raw.strip())
     except Exception as exc:
         raise RuntimeError(
-            f"[gemini] Quote generation failed: {type(exc).__name__}: {exc}\n"
-            "Check GEMINI_API_KEY and model availability."
+            f"[groq] Quote generation failed: {type(exc).__name__}: {exc}\n"
+            "Check GROQ_API_KEY at https://console.groq.com/keys"
         ) from exc
 
     required = {"slide_1", "slide_2", "slide_3", "slide_4", "caption", "hashtags", "mood", "visual_theme"}
     missing = required - data.keys()
     if missing:
         raise RuntimeError(
-            f"[gemini] Quote response missing fields: {missing}\n"
+            f"[groq] Quote response missing fields: {missing}\n"
             f"Raw response was: {raw[:300]}"
         )
 

@@ -8,6 +8,7 @@ def _clean(val: str) -> str:
     return val.strip().splitlines()[0].strip() if val.strip() else val
 
 GEMINI_API_KEY      = _clean(os.getenv("GEMINI_API_KEY", ""))
+GROQ_API_KEY        = _clean(os.getenv("GROQ_API_KEY", ""))
 INSTAGRAM_USERNAME  = _clean(os.getenv("INSTAGRAM_USERNAME", ""))
 QUOTE_CATEGORY      = os.getenv("QUOTE_CATEGORY", "mindset")
 POST_INTERVAL_HOURS = int(os.getenv("POST_INTERVAL_HOURS", "1"))
@@ -25,6 +26,8 @@ CLOUDINARY_API_SECRET = _clean(os.getenv("CLOUDINARY_API_SECRET", ""))
 
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not set — get one at https://aistudio.google.com/apikey")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY not set — get a free key at https://console.groq.com/keys")
 if not IG_USER_ID or not IG_ACCESS_TOKEN:
     raise ValueError("IG_USER_ID and IG_ACCESS_TOKEN must be set in .env / GitHub Secrets")
 if not CLOUDINARY_CLOUD_NAME or not CLOUDINARY_API_KEY or not CLOUDINARY_API_SECRET:
