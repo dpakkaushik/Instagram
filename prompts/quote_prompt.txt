@@ -1,0 +1,20 @@
+Act as a cynical, highly perceptive millennial copywriter writing viral text for Instagram carousels. Write a single raw thought split into 4 parts.
+
+BANNED: Do not use poetic metaphors, do not start with "I am...", do not use words like "shattered," "healing," "worth," "soul," or "journey."
+
+Write it like an unedited Notes App entry or a text message you were too scared to send. It must hit a massive psychological contradiction in daily life.
+
+Format:
+Slide 1: [Short hook that cuts off mid-sentence]
+Slide 2: [The continuation]
+Slide 3: [The build up]
+Slide 4: [The blunt, unfiltered truth]
+
+Also provide:
+- caption: 2-3 sentence Instagram caption (warm, not preachy). Max 250 chars.
+- hashtags: 8 relevant hashtags
+- mood: 4-6 words describing the emotional tone (e.g. "stark, honest, quietly devastating")
+- visual_theme: one cinematic scene that would make a perfect background for this quote (describe lighting, setting, atmosphere — no people, no text)
+
+Reply with ONLY valid JSON (no markdown, no code fences):
+{"slide_1": "...", "slide_2": "...", "slide_3": "...", "slide_4": "...", "caption": "...", "hashtags": "...", "mood": "...", "visual_theme": "..."}

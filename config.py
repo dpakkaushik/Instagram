@@ -8,12 +8,9 @@ def _clean(val: str) -> str:
     return val.strip().splitlines()[0].strip() if val.strip() else val
 
 GEMINI_API_KEY      = _clean(os.getenv("GEMINI_API_KEY", ""))
-GROQ_API_KEY        = _clean(os.getenv("GROQ_API_KEY", ""))
 INSTAGRAM_USERNAME  = _clean(os.getenv("INSTAGRAM_USERNAME", ""))
-INSTAGRAM_PASSWORD  = _clean(os.getenv("INSTAGRAM_PASSWORD", ""))
-NEWS_TOPIC          = os.getenv("NEWS_TOPIC", "world news")
-POST_COUNT          = int(os.getenv("POST_COUNT", "5"))
-POST_INTERVAL_HOURS = int(os.getenv("POST_INTERVAL_HOURS", "6"))
+QUOTE_CATEGORY      = os.getenv("QUOTE_CATEGORY", "mindset")
+POST_INTERVAL_HOURS = int(os.getenv("POST_INTERVAL_HOURS", "1"))
 
 # Official Instagram Graph API
 IG_USER_ID      = _clean(os.getenv("IG_USER_ID", ""))
@@ -21,9 +18,17 @@ IG_ACCESS_TOKEN = _clean(os.getenv("IG_ACCESS_TOKEN", ""))
 IG_APP_SECRET   = _clean(os.getenv("IG_APP_SECRET", ""))
 IMGBB_API_KEY   = _clean(os.getenv("IMGBB_API_KEY", ""))
 
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY not set in .env — get a free key at https://console.groq.com")
+# Cloudinary — for video hosting (required for Reel posts)
+CLOUDINARY_CLOUD_NAME = _clean(os.getenv("CLOUDINARY_CLOUD_NAME", ""))
+CLOUDINARY_API_KEY    = _clean(os.getenv("CLOUDINARY_API_KEY", ""))
+CLOUDINARY_API_SECRET = _clean(os.getenv("CLOUDINARY_API_SECRET", ""))
+
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY not set — get one at https://aistudio.google.com/apikey")
 if not IG_USER_ID or not IG_ACCESS_TOKEN:
-    raise ValueError("IG_USER_ID and IG_ACCESS_TOKEN must be set in .env")
-if not IMGBB_API_KEY or IMGBB_API_KEY == "your_imgbb_key_here":
-    raise ValueError("IMGBB_API_KEY not set — get a free key at https://imgbb.com/api")
+    raise ValueError("IG_USER_ID and IG_ACCESS_TOKEN must be set in .env / GitHub Secrets")
+if not CLOUDINARY_CLOUD_NAME or not CLOUDINARY_API_KEY or not CLOUDINARY_API_SECRET:
+    raise ValueError(
+        "CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET must be set — "
+        "get a free account at https://cloudinary.com"
+    )

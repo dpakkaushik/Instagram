@@ -18,6 +18,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
@@ -26,15 +29,15 @@ jobs:
 
       - name: Run pipeline
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINISECRET }}
-          GROQ_API_KEY: ${{ secrets.GROKSECRET }}
-          INSTAGRAM_USERNAME: ${{ secrets.INSTAUSERNAMESECRET }}
-          INSTAGRAM_PASSWORD: ${{ secrets.INSTAPASSWORDSECRET }}
-          NEWS_TOPIC: "entertainment,sports,technology,world news,science,business,health,politics,space,AI,gaming,environment"
-          POST_COUNT: "2"
-          POST_INTERVAL_HOURS: "12"
-          IG_USER_ID: ${{ secrets.IGUSERIDSECRET }}
-          IG_ACCESS_TOKEN: ${{ secrets.IGACCESSTOKENSECRET }}
-          IG_APP_SECRET: ${{ secrets.IGAPPSECRET }}
-          IMGBB_API_KEY: ${{ secrets.IMGBBKEYSECRET }}
+          GEMINI_API_KEY:           ${{ secrets.GEMINISECRET }}
+          INSTAGRAM_USERNAME:       ${{ secrets.INSTAUSERNAMESECRET }}
+          QUOTE_CATEGORY:           "mindset,growth,love,resilience,courage,success,peace,wisdom"
+          POST_INTERVAL_HOURS:      "1"
+          IG_USER_ID:               ${{ secrets.IGUSERIDSECRET }}
+          IG_ACCESS_TOKEN:          ${{ secrets.IGACCESSTOKENSECRET }}
+          IG_APP_SECRET:            ${{ secrets.IGAPPSECRET }}
+          IMGBB_API_KEY:            ${{ secrets.IMGBBKEYSECRET }}
+          CLOUDINARY_CLOUD_NAME:    ${{ secrets.CLOUDINARYNAME }}
+          CLOUDINARY_API_KEY:       ${{ secrets.CLOUDINARYKEY }}
+          CLOUDINARY_API_SECRET:    ${{ secrets.CLOUDINARYSECRET }}
         run: python main.py --once

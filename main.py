@@ -1,32 +1,25 @@
 """
-Insta Pipeline — main entry point.
+Instagram Reel Pipeline — main entry point.
 
 Usage:
-  python main.py          # run once now, then every N hours (set in .env)
+  python main.py          # run once now, then every N hours
   python main.py --once   # run exactly once and exit
-  python main.py --dry    # fetch + generate images, skip posting
+  python main.py --dry    # generate everything, skip posting
 """
 
 import sys
 import time
+import traceback
 from datetime import datetime
 from pathlib import Path
 
 import schedule
 
-from config import NEWS_TOPIC, POST_COUNT, POST_INTERVAL_HOURS
-from news_fetcher import fetch_news
-
-def _pick_topic() -> str:
-    topics = [t.strip() for t in NEWS_TOPIC.split(",") if t.strip()]
-    if len(topics) <= 1:
-        return NEWS_TOPIC.strip()
-    now = datetime.now()
-    idx = (now.hour * 4 + now.minute // 15) % len(topics)
-    return topics[idx]
-from gemini_processor import summarize_news, generate_background_image
+from config import QUOTE_CATEGORY, POST_INTERVAL_HOURS
+from gemini_processor import generate_carousel, generate_slide_backgrounds
 from image_composer import compose_card
-from instagram_poster import post_image
+from video_composer import compose_reel
+from instagram_poster import post_reel
 
 OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -34,77 +27,91 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 DRY_RUN = "--dry" in sys.argv
 
 
+def _pick_category() -> str:
+    categories = [c.strip() for c in QUOTE_CATEGORY.split(",") if c.strip()]
+    if len(categories) <= 1:
+        return QUOTE_CATEGORY.strip()
+    now = datetime.now()
+    idx = (now.hour * 4 + now.minute // 15) % len(categories)
+    return categories[idx]
+
+
 def run_pipeline() -> None:
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    topic = _pick_topic()
-    print(f"\n{'='*56}")
-    print(f"  Pipeline started at {ts}")
-    print(f"  Topic: '{topic}'  |  Count: {POST_COUNT}  |  Dry: {DRY_RUN}")
-    print(f"{'='*56}")
+    ts       = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    run_id   = datetime.now().strftime("%Y%m%d_%H%M%S")
+    category = _pick_category()
 
-    articles = fetch_news(topic=topic, count=POST_COUNT)
-    if not articles:
-        print("[pipeline] No articles fetched — aborting run")
-        return
+    print(f"\n{'='*60}")
+    print(f"  Instagram Reel Pipeline — {ts}")
+    print(f"  Category: {category}  |  Dry run: {DRY_RUN}")
+    print(f"{'='*60}")
 
-    print(f"[pipeline] Fetched {len(articles)} articles\n")
-    posted = 0
+    try:
+        # ── STEP 1: Generate 4-slide quote ───────────────────────────
+        print("\n[1/5] Generating quote (Gemini text)...")
+        carousel = generate_carousel(category)
+        print(f"  Mood       : {carousel['mood']}")
+        print(f"  Slide 1    : {carousel['slide_1']}")
+        print(f"  Slide 2    : {carousel['slide_2']}")
+        print(f"  Slide 3    : {carousel['slide_3']}")
+        print(f"  Slide 4    : {carousel['slide_4']}")
+        print(f"  Theme      : {carousel['visual_theme']}")
 
-    for idx, article in enumerate(articles, 1):
-        short_title = article["title"][:60]
-        print(f"[{idx}/{len(articles)}] {short_title}...")
+        # ── STEP 2: Generate slide backgrounds ───────────────────────
+        print("\n[2/5] Generating backgrounds (Imagen 3 — 4 calls)...")
+        bg_images = generate_slide_backgrounds(carousel)
+        print(f"  All 4 backgrounds generated successfully")
 
-        try:
-            # 1 — Summarise with Gemini
-            print("  · Summarising with Gemini...")
-            processed = summarize_news(article)
+        # ── STEP 3: Compose slide cards ──────────────────────────────
+        print("\n[3/5] Composing slide cards...")
+        image_paths = []
+        slide_keys  = ["slide_1", "slide_2", "slide_3", "slide_4"]
 
-            # 2 — Generate background image
-            print("  · Generating background image...")
-            bg = generate_background_image(processed["image_prompt"])
-
-            # 3 — Compose card
-            print("  · Composing 1080×1080 card...")
+        for i, (key, bg) in enumerate(zip(slide_keys, bg_images), 1):
             card = compose_card(
-                headline=processed["headline"],
-                caption=processed["caption"],
-                source=article["source"],
-                bg_image=bg,
+                slide_text   = carousel[key],
+                slide_num    = i,
+                total_slides = 4,
+                bg_image     = bg,
+                category     = category,
             )
+            path = OUTPUT_DIR / f"slide_{run_id}_{i:02d}.jpg"
+            card.save(str(path), "JPEG", quality=95)
+            image_paths.append(str(path))
+            print(f"  Slide {i}/4 saved: {path.name}")
 
-            # 4 — Save to disk
-            img_path = OUTPUT_DIR / f"card_{article['id']}_{idx:02d}.jpg"
-            card.save(str(img_path), "JPEG", quality=95)
-            print(f"  · Saved: {img_path}")
+        # ── STEP 4: Compose Reel video ───────────────────────────────
+        print("\n[4/5] Composing Reel video (moviepy)...")
+        reel_path = str(OUTPUT_DIR / f"reel_{run_id}.mp4")
+        compose_reel(image_paths, reel_path)
 
-            # 5 — Build caption
-            ig_caption = (
-                f"{processed['headline']}\n\n"
-                f"{processed['caption']}\n\n"
-                f"{processed['hashtags']}\n\n"
-                f"Source: {article['source']}"
-            )
+        # ── STEP 5: Post ─────────────────────────────────────────────
+        ig_caption = (
+            f"{carousel['caption']}\n\n"
+            f"{carousel['hashtags']}"
+        )
 
-            # 6 — Post
-            if DRY_RUN:
-                print("  · [DRY RUN] Skipping post")
-            else:
-                print("  · Posting to Instagram...")
-                url = post_image(str(img_path), ig_caption)
-                print(f"  DONE Live -> {url}")
-                posted += 1
+        if DRY_RUN:
+            print("\n[5/5] DRY RUN — skipping post")
+            print(f"  Caption preview:\n  {ig_caption[:200]}")
+            print(f"\n  Output files in: {OUTPUT_DIR.resolve()}")
+        else:
+            print("\n[5/5] Posting Reel to Instagram...")
+            url = post_reel(reel_path, ig_caption)
+            print(f"\n  POSTED: {url}")
 
-            # Polite gap between posts
-            if idx < len(articles) and not DRY_RUN:
-                print("  · Waiting 30 s before next post...")
-                time.sleep(30)
+        print(f"\n{'='*60}")
+        print(f"  Pipeline complete — {datetime.now().strftime('%H:%M:%S')}")
+        print(f"{'='*60}\n")
 
-        except Exception as exc:
-            print(f"  ERROR on article {idx}: {exc}")
-            continue
-
-    label = "generated" if DRY_RUN else "posted"
-    print(f"\n[pipeline] Done — {posted if not DRY_RUN else len(articles)} cards {label}.\n")
+    except Exception as exc:
+        print(f"\n{'!'*60}")
+        print(f"  PIPELINE FAILED")
+        print(f"  Error type : {type(exc).__name__}")
+        print(f"  Message    : {exc}")
+        print(f"{'!'*60}")
+        print(traceback.format_exc())
+        print("  Run aborted — no post was made.\n")
 
 
 if __name__ == "__main__":

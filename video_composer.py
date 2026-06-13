@@ -1,0 +1,78 @@
+"""
+Combine 4 slide JPEGs + an optional music track into a single MP4 Reel.
+Each slide is shown for SLIDE_DURATION seconds. Music is trimmed to fit
+and faded out in the last second. If no music file is found the Reel is
+posted silent — the run is NOT aborted for missing music.
+"""
+
+import random
+from pathlib import Path
+
+SLIDE_DURATION = 3.0          # seconds per slide
+MUSIC_DIR      = Path("music")
+OUTPUT_FPS     = 30
+
+
+def _pick_music() -> str | None:
+    if not MUSIC_DIR.exists():
+        print("  [video] music/ folder not found — posting silent")
+        return None
+    tracks = (
+        list(MUSIC_DIR.glob("*.mp3"))
+        + list(MUSIC_DIR.glob("*.m4a"))
+        + list(MUSIC_DIR.glob("*.wav"))
+    )
+    if not tracks:
+        print("  [video] No audio files in music/ — posting silent")
+        return None
+    chosen = random.choice(tracks)
+    print(f"  [video] Music: {chosen.name}")
+    return str(chosen)
+
+
+def compose_reel(image_paths: list[str], output_path: str) -> str:
+    """
+    Build output_path MP4 from image_paths.
+    Raises RuntimeError on failure so the caller can abort cleanly.
+    """
+    try:
+        from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
+    except ImportError as exc:
+        raise RuntimeError(
+            "[video] moviepy is not installed. Run: pip install moviepy\n"
+            f"Original error: {exc}"
+        ) from exc
+
+    print(f"  [video] Composing {len(image_paths)} slides × {SLIDE_DURATION}s each...")
+    try:
+        clips = [ImageClip(p).set_duration(SLIDE_DURATION) for p in image_paths]
+        video = concatenate_videoclips(clips, method="compose")
+
+        music_path = _pick_music()
+        if music_path:
+            try:
+                audio = (
+                    AudioFileClip(music_path)
+                    .subclip(0, video.duration)
+                    .audio_fadeout(1.0)
+                )
+                video = video.set_audio(audio)
+            except Exception as exc:
+                print(f"  [video] WARNING: Could not load music ({exc}) — posting silent")
+
+        video.write_videofile(
+            output_path,
+            fps=OUTPUT_FPS,
+            codec="libx264",
+            audio_codec="aac",
+            verbose=False,
+            logger=None,
+        )
+        print(f"  [video] Saved: {output_path}")
+        return output_path
+
+    except Exception as exc:
+        raise RuntimeError(
+            f"[video] Reel composition failed: {type(exc).__name__}: {exc}\n"
+            "Check that ffmpeg is installed and all slide images exist."
+        ) from exc
