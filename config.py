@@ -9,6 +9,7 @@ def _clean(val: str) -> str:
 
 GEMINI_API_KEY      = _clean(os.getenv("GEMINI_API_KEY", ""))
 GROQ_API_KEY        = _clean(os.getenv("GROQ_API_KEY", ""))
+HF_API_TOKEN        = _clean(os.getenv("HF_API_TOKEN", ""))  # optional — huggingface.co free token
 INSTAGRAM_USERNAME  = _clean(os.getenv("INSTAGRAM_USERNAME", ""))
 QUOTE_CATEGORY      = os.getenv("QUOTE_CATEGORY", "mindset")
 POST_INTERVAL_HOURS = int(os.getenv("POST_INTERVAL_HOURS", "1"))

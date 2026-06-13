@@ -219,6 +219,7 @@ def post_reel(video_path: str, caption: str) -> str:
             "media_type":   "REELS",
             "video_url":    video_url,
             "caption":      caption[:2200],
+            "audio_name":   "Don't worry",
             "access_token": token,
         },
         timeout=30,

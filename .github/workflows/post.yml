@@ -31,6 +31,7 @@ jobs:
         env:
           GEMINI_API_KEY:           ${{ secrets.GEMINISECRET }}
           GROQ_API_KEY:             ${{ secrets.GROKSECRET }}
+          HF_API_TOKEN:             ${{ secrets.HFSECRET }}
           INSTAGRAM_USERNAME:       ${{ secrets.INSTAUSERNAMESECRET }}
           QUOTE_CATEGORY:           "mindset,growth,love,resilience,courage,success,peace,wisdom"
           POST_INTERVAL_HOURS:      "1"

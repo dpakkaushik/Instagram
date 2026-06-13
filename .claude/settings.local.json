@@ -1,9 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pip install *)",
+      "PowerShell(git clone https://github.com/dpakkaushik/Instagram.git .)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git config *)",
+      "Bash(gh --version)",
       "PowerShell(python --version)",
-      "PowerShell(python -m pip --version)"
+      "PowerShell($env:GEMINI_API_KEY ; $env:IG_ACCESS_TOKEN ; $env:CLOUDINARY_CLOUD_NAME)",
+      "PowerShell($env:GEMINI_API_KEY)",
+      "PowerShell($env:IG_ACCESS_TOKEN)",
+      "PowerShell($env:CLOUDINARY_CLOUD_NAME)"
     ]
   }
 }
