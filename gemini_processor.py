@@ -11,7 +11,7 @@ from config import GEMINI_API_KEY
 
 _gemini = genai.Client(api_key=GEMINI_API_KEY)
 
-GEMINI_TEXT_MODEL  = "gemini-1.5-flash"
+GEMINI_TEXT_MODEL  = "gemini-2.0-flash"
 IMAGEN_MODEL       = "imagen-3.0-generate-002"
 QUOTE_PROMPT_FILE  = Path("prompts/quote_prompt.txt")
 IMAGE_PROMPT_FILE  = Path("prompts/image_prompt.txt")
