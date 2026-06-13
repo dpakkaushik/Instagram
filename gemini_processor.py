@@ -61,15 +61,26 @@ def generate_background_image(prompt: str) -> Image.Image | None:
         f"Cinematic photorealistic news background: {prompt}. "
         "No text, no watermarks, dramatic lighting, professional journalism style, 4K."
     )
-    try:
-        url = "https://image.pollinations.ai/prompt/" + requests.utils.quote(full_prompt)
-        r = requests.get(
-            url,
-            params={"width": 1080, "height": 1080, "nologo": "true", "model": "flux"},
-            timeout=90,
-        )
-        r.raise_for_status()
-        return Image.open(BytesIO(r.content)).convert("RGB")
-    except Exception as exc:
-        print(f"  [image] Generation failed ({type(exc).__name__}), using gradient")
+    url = "https://image.pollinations.ai/prompt/" + requests.utils.quote(full_prompt)
+
+    for attempt in range(3):
+        try:
+            print(f"  [image] Attempt {attempt + 1}/3...")
+            r = requests.get(
+                url,
+                params={"width": 1080, "height": 1080, "nologo": "true", "model": "flux"},
+                timeout=120,
+            )
+            r.raise_for_status()
+            content_type = r.headers.get("content-type", "")
+            if "image" not in content_type:
+                print(f"  [image] Unexpected content-type: {content_type} — retrying")
+                continue
+            img = Image.open(BytesIO(r.content)).convert("RGB")
+            print(f"  [image] Generated ({img.size[0]}x{img.size[1]})")
+            return img
+        except Exception as exc:
+            print(f"  [image] Attempt {attempt + 1} failed: {type(exc).__name__}: {exc}")
+
+    print("  [image] All attempts failed — using gradient fallback")
     return None
