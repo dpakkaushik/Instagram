@@ -33,13 +33,14 @@ def download_fonts() -> None:
             print("    Falling back to Pillow's built-in font (lower quality)")
 
 def check_env() -> None:
-    from pathlib import Path
-    if not Path(".env").exists():
+    if Path(".env").exists():
+        print("\n.env already exists.")
+    elif Path(".env.example").exists():
         import shutil
         shutil.copy(".env.example", ".env")
         print("\n.env created from .env.example — fill in your credentials before running.")
     else:
-        print("\n.env already exists.")
+        print("\n.env not found (using environment variables — OK for GitHub Actions).")
 
 if __name__ == "__main__":
     download_fonts()
