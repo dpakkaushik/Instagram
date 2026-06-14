@@ -55,11 +55,6 @@ def _draw_quote(d: ImageDraw.ImageDraw, quote: str, accent: tuple) -> None:
         start_y += line_h
 
 
-def _draw_accent_bar(d: ImageDraw.ImageDraw, accent: tuple) -> None:
-    """Thin coloured bar at the very bottom — subtle brand mark."""
-    bar_h = 6
-    d.rectangle([(0, CANVAS[1] - bar_h), (CANVAS[0], CANVAS[1])], fill=accent)
-
 
 def make_gradient_bg(mood_number: int = 1) -> Image.Image:
     """Fallback gradient if no template image is found."""
@@ -96,6 +91,5 @@ def compose_card(
 
     d = ImageDraw.Draw(canvas)
     _draw_quote(d, quote, accent)
-    _draw_accent_bar(d, accent)
 
     return canvas.convert("RGB")
