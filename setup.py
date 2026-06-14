@@ -15,10 +15,11 @@ FONTS = {
     "Roboto.ttf":         "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Regular.ttf",
     "RobotoBold.ttf":     "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Bold.ttf",
     "RobotoLight.ttf":    "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Light.ttf",
+    "CaveatBold.ttf":     "https://github.com/googlefonts/caveat/raw/main/fonts/ttf/Caveat-Bold.ttf",
 }
 
 def download_fonts() -> None:
-    print("Downloading Roboto fonts...")
+    print("Downloading fonts...")
     for filename, url in FONTS.items():
         dest = FONT_DIR / filename
         if dest.exists():

@@ -39,34 +39,18 @@ def _load_font(filename: str, size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default()
 
 
-def _add_text_scrim(canvas: Image.Image) -> Image.Image:
-    """Dark gradient over the full image so white text is always readable."""
-    overlay = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
-    d = ImageDraw.Draw(overlay)
-    for y in range(CANVAS[1]):
-        t = y / CANVAS[1]
-        # Darker in the middle where the quote sits
-        mid = abs(t - 0.5) * 2          # 0 at centre, 1 at edges
-        alpha = int(160 + (1 - mid) * 60)
-        d.line([(0, y), (CANVAS[0], y)], fill=(0, 0, 0, alpha))
-    return Image.alpha_composite(canvas, overlay)
-
-
 def _draw_quote(d: ImageDraw.ImageDraw, quote: str, accent: tuple) -> None:
-    """Large centred quote text in the vertical middle of the card."""
-    font = _load_font("RobotoBold.ttf", 72)
-    wrapped = textwrap.fill(quote, width=18)
+    font = _load_font("CaveatBold.ttf", 50)
+    wrapped = textwrap.fill(quote, width=16)
     lines = wrapped.splitlines()
 
-    line_h = 92
-    total_h = len(lines) * line_h
-    start_y = (CANVAS[1] - total_h) // 2
+    line_h = 62
+    start_y = int(CANVAS[1] * 0.30)
 
     for line in lines:
         bbox = d.textbbox((0, 0), line, font=font)
         tw = bbox[2] - bbox[0]
         x = (CANVAS[0] - tw) // 2
-        # Soft shadow
         d.text((x + 3, start_y + 3), line, font=font, fill=(0, 0, 0, 140))
         d.text((x, start_y), line, font=font, fill="white")
         start_y += line_h
@@ -103,7 +87,6 @@ def compose_card(
     accent = MOOD_COLORS.get(mood_number, DEFAULT_ACCENT)
 
     canvas = bg_image.resize(CANVAS, Image.LANCZOS).convert("RGBA")
-    canvas = _add_text_scrim(canvas)
 
     d = ImageDraw.Draw(canvas)
     _draw_quote(d, quote, accent)
