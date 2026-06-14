@@ -1,21 +1,10 @@
-from datetime import date
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 CANVAS = (1080, 1920)   # 9:16 portrait — Instagram Reels
 FONT_DIR = Path(__file__).parent / "fonts"
 
-CATEGORY_COLORS: dict[str, tuple] = {
-    "mindset":    (99,  102, 241),
-    "growth":     (16,  185, 129),
-    "love":       (244,  63,  94),
-    "resilience": (245, 158,  11),
-    "courage":    (239,  68,  68),
-    "success":    (234, 179,   8),
-    "peace":      (14,  165, 233),
-    "wisdom":     (168,  85, 247),
-}
 DEFAULT_ACCENT = (255, 255, 255)
 
 MOOD_COLORS: dict[int, tuple] = {
