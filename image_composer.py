@@ -39,12 +39,12 @@ def _load_font(filename: str, size: int) -> ImageFont.FreeTypeFont:
 
 
 def _draw_quote(d: ImageDraw.ImageDraw, quote: str, accent: tuple) -> None:
-    font = _load_font("CaveatBold.ttf", 60)
+    font = _load_font("CaveatBold.ttf", 80)
     words = quote.split()
     lines = [" ".join(words[i:i+3]) for i in range(0, len(words), 3)]
 
-    line_h = 75
-    start_y = int(CANVAS[1] * 0.10)
+    line_h = 95
+    start_y = int(CANVAS[1] * 0.25)
 
     for line in lines:
         bbox = d.textbbox((0, 0), line, font=font)
