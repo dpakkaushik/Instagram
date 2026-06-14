@@ -208,16 +208,6 @@ def post_image(image_path: str, caption: str) -> str:
 # Post: Reel
 # ---------------------------------------------------------------------------
 
-# Preferred Instagram audio tracks in priority order.
-# If the first is not found in IG's library the API returns an audio-related
-# error and we retry with the next name.  If none match, we post without music.
-_AUDIO_NAMES = [
-    "Don't worry",
-    "Jacob and the Stone",
-    "Thank you for being gentle",
-]
-
-
 def _create_reel_container(token: str, video_url: str, caption: str, audio_name: str | None) -> str:
     params: dict = {
         "media_type":   "REELS",
@@ -236,13 +226,13 @@ def _create_reel_container(token: str, video_url: str, caption: str, audio_name:
     return r.json()["id"]
 
 
-def post_reel(video_path: str, caption: str) -> str:
+def post_reel(video_path: str, caption: str, audio_name: str | None = None) -> str:
     token     = _get_token()
     video_url = _host_video(video_path)
 
-    # Try each preferred audio name; fall back to no audio if all fail.
+    # Try track name first, then fall back to no audio
     container_id: str | None = None
-    for audio in _AUDIO_NAMES + [None]:
+    for audio in ([audio_name] if audio_name else []) + [None]:
         label = f'"{audio}"' if audio else "no audio"
         print(f"  [instagram] Creating Reel container — audio: {label}...")
         try:

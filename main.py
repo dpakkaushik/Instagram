@@ -143,15 +143,16 @@ def run_pipeline() -> None:
         reel_path  = str(OUTPUT_DIR / f"reel_{run_id}.mp4")
 
         print("\n[4/4] Composing Reel video...")
-        compose_reel([card_path], reel_path, duration=REEL_DURATION)
+        reel_path, track_name = compose_reel([card_path], reel_path, duration=REEL_DURATION)
 
         if DRY_RUN:
             print("\n  DRY RUN — skipping post")
             print(f"  Caption preview: {ig_caption[:200]}")
+            print(f"  Track name    : {track_name}")
             print(f"  Output: {OUTPUT_DIR.resolve()}")
         else:
             print("  Posting Reel to Instagram...")
-            url = post_reel(reel_path, ig_caption)
+            url = post_reel(reel_path, ig_caption, audio_name=track_name)
             print(f"\n  POSTED: {url}")
 
         print(f"\n{'='*60}")

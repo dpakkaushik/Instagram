@@ -51,11 +51,10 @@ def _pick_music() -> str | None:
     return str(chosen)
 
 
-def compose_reel(image_paths: list[str], output_path: str, duration: float | None = None) -> str:
+def compose_reel(image_paths: list[str], output_path: str, duration: float | None = None) -> tuple[str, str | None]:
     """
     Build output_path MP4 from image_paths.
-    duration overrides SLIDE_DURATION per slide when provided.
-    Raises RuntimeError on failure so the caller can abort cleanly.
+    Returns (output_path, track_name_without_extension) so caller can use track name for IG audio.
     """
     try:
         from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
@@ -65,7 +64,8 @@ def compose_reel(image_paths: list[str], output_path: str, duration: float | Non
             f"Original error: {exc}"
         ) from exc
 
-    slide_dur = duration if duration is not None else SLIDE_DURATION
+    slide_dur  = duration if duration is not None else SLIDE_DURATION
+    track_name = None
     print(f"  [video] Composing {len(image_paths)} slide(s) × {slide_dur}s each...")
     try:
         clips = [ImageClip(p).set_duration(slide_dur) for p in image_paths]
@@ -76,12 +76,12 @@ def compose_reel(image_paths: list[str], output_path: str, duration: float | Non
             try:
                 from moviepy.audio.AudioClip import concatenate_audioclips
                 audio = AudioFileClip(music_path)
-                # Loop audio if shorter than video
                 if audio.duration < video.duration:
                     loops = int(video.duration / audio.duration) + 1
                     audio = concatenate_audioclips([audio] * loops)
                 audio = audio.subclip(0, video.duration).audio_fadeout(1.0)
                 video = video.set_audio(audio)
+                track_name = Path(music_path).stem  # filename without extension
             except Exception as exc:
                 print(f"  [video] WARNING: Could not load music ({exc}) — posting silent")
 
@@ -94,7 +94,7 @@ def compose_reel(image_paths: list[str], output_path: str, duration: float | Non
             logger=None,
         )
         print(f"  [video] Saved: {output_path}")
-        return output_path
+        return output_path, track_name
 
     except Exception as exc:
         raise RuntimeError(
