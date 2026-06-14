@@ -19,7 +19,7 @@ def _parse_quote_json(raw: str, source: str) -> dict:
     raw = re.sub(r"^```[a-z]*\n?", "", raw).strip()
     raw = re.sub(r"\n?```$", "", raw).strip()
     data = json.loads(raw)
-    required = {"mood_number", "quote", "caption", "hashtags", "visual_theme"}
+    required = {"mood_number", "mood_name", "quote", "caption", "hashtags", "visual_theme"}
     missing = required - data.keys()
     if missing:
         raise ValueError(f"[{source}] Missing fields: {missing} | Raw: {raw[:200]}")

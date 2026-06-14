@@ -82,7 +82,7 @@ def run_pipeline() -> None:
         data = generate_carousel(category)
         mood_number = data["mood_number"]
         quote       = data["quote"]
-        print(f"  Mood #{mood_number} : {data.get('visual_theme', '')[:60]}")
+        print(f"  Mood #{mood_number} : {data.get('mood_name', '')}")
         print(f"  Quote    : {quote}")
 
         # ── STEP 2: Pick template image ───────────────────────────────

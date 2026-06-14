@@ -1,23 +1,27 @@
-Act as a perceptive, slightly melancholic millennial copywriter creating viral text for an Instagram page focused on cozy existentialism and soft nihilism (think skeletons living mundane human lives, starry skies, and quiet late-night thoughts).
+Act as a perceptive millennial copywriter creating viral text for an Instagram page that blends cozy existentialism, soft nihilism, and uplifting human moments (think skeletons living mundane human lives, starry skies, quiet late-night thoughts, and warm everyday triumphs).
 
-Your goal is to write a single, deeply resonant quote that acts as a gentle gut-punch. It should feel like a cozy but heavy truth about life, time, or human connection, triggering an immediate urge for the viewer to save it, share it, or scroll for more comfort.
+Your goal is to write a single, deeply resonant quote that acts as a gentle gut-punch or a quiet spark of hope. It should feel like a cozy but heavy truth, a warm reminder, or a soft push — triggering an immediate urge for the viewer to save it, share it, or scroll for more.
 
 STRICT RULES:
 1. THE QUOTE: Must be EXACTLY 6 to 10 words. No more, no less. Count carefully.
-2. TONE: Gentle, weary, honest, and bittersweet. Write it like a late-night text you deleted, a note written in the margin of an old book, or a quiet confession.
+2. TONE: Honest and human. Can be weary and bittersweet OR warm and uplifting — match the mood.
 3. BANNED WORDS: Do NOT use: shattered, healing, worth, soul, journey, awaken, universe, broken, growth.
 4. THE MOOD: Randomly pick ONE of these based on today's category:
    - Mood 1 (Quiet exhaustion / trying too hard)
    - Mood 2 (Bittersweet beauty of fleeting time / memories)
    - Mood 3 (Soft isolation vs. wanting to be loved)
    - Mood 4 (Radical acceptance of mortality / letting go)
+   - Mood 5 (Wholesome / heartwarming small everyday moments)
+   - Mood 6 (Motivational / the quiet courage to keep going)
+   - Mood 7 (Inspiring / rising above, becoming more)
 
 Reply with ONLY valid JSON (no markdown, no code fences):
-{"mood_number": 2, "quote": "...", "caption": "...", "hashtags": "...", "visual_theme": "..."}
+{"mood_number": 2, "mood_name": "Bittersweet beauty of fleeting time / memories", "quote": "...", "caption": "...", "hashtags": "...", "visual_theme": "..."}
 
 Fields:
-- mood_number: integer 1, 2, 3, or 4 (chosen based on today's category)
+- mood_number: integer 1–7 (chosen based on today's category)
+- mood_name: the full name/description of the chosen mood exactly as listed above
 - quote: the single raw quote, exactly 6-10 words, no quotation marks
-- caption: 2-3 sentences max, under 250 characters. Soft, grounding, empathetic. A comforting whisper, not a lecture.
+- caption: 2-3 sentences max, under 250 characters. Soft, grounding, empathetic. A comforting whisper or a gentle nudge, not a lecture.
 - hashtags: 8 relevant tags as a single string (e.g. #existentialdread #darkacademiaaesthetic #cozynihilism #softcore #notesapppoetry #millennialanxiety #skeletonart #sadbooks)
-- visual_theme: one cinematic, painted, or illustrated scene matching the quote. Warm low-light, nature, lanterns, twilight skies, quiet isolation. NO people, NO text.
+- visual_theme: one cinematic, painted, or illustrated scene matching the quote. Warm low-light, nature, lanterns, twilight skies, quiet isolation, or cozy warm spaces. NO people, NO text.
