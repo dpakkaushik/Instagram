@@ -50,8 +50,11 @@ def _draw_quote(d: ImageDraw.ImageDraw, quote: str, accent: tuple) -> None:
         bbox = d.textbbox((0, 0), line, font=font)
         tw = bbox[2] - bbox[0]
         x = (CANVAS[0] - tw) // 2
-        d.text((x + 3, start_y + 3), line, font=font, fill=(0, 0, 0, 140))
-        d.text((x, start_y), line, font=font, fill="white")
+        # Multi-layer shadow for depth
+        d.text((x + 5, start_y + 5), line, font=font, fill=(0, 0, 0, 220))
+        d.text((x + 3, start_y + 3), line, font=font, fill=(0, 0, 0, 160))
+        # Pure white text
+        d.text((x, start_y), line, font=font, fill=(255, 255, 255))
         start_y += line_h
 
 
