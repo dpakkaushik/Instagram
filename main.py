@@ -43,14 +43,12 @@ def _pick_category() -> str:
 
 
 def _pick_template(mood_number: int) -> Image.Image:
-    """Pick a random template image labelled with the mood number."""
-    prefix = f"mood{mood_number}"
+    """Pick a random template image. Naming: MMCC.ext where MM=mood, CC=count (e.g. 0101.png)."""
+    prefix = f"{mood_number:02d}"
     candidates = (
-        list(TEMPLATE_DIR.glob(f"{prefix}_*.jpg"))
-        + list(TEMPLATE_DIR.glob(f"{prefix}_*.jpeg"))
-        + list(TEMPLATE_DIR.glob(f"{prefix}_*.png"))
-        + list(TEMPLATE_DIR.glob(f"{prefix}/*.jpg"))
-        + list(TEMPLATE_DIR.glob(f"{prefix}/*.png"))
+        list(TEMPLATE_DIR.glob(f"{prefix}*.jpg"))
+        + list(TEMPLATE_DIR.glob(f"{prefix}*.jpeg"))
+        + list(TEMPLATE_DIR.glob(f"{prefix}*.png"))
     )
     if not candidates:
         # Fall back to any image in templates/
