@@ -34,9 +34,11 @@ DRY_RUN = "--dry" in sys.argv
 REEL_DURATION = 10.0   # seconds — single image Reel
 
 
-TOTAL_MOODS   = 10
-MOOD_HISTORY  = Path("mood_history.json")
-MOOD_NO_REPEAT = 3  # how many recent moods to avoid
+TOTAL_MOODS       = 10
+MOOD_HISTORY      = Path("mood_history.json")
+MOOD_NO_REPEAT    = 3
+TEMPLATE_HISTORY  = Path("template_history.json")
+TEMPLATE_NO_REPEAT = 3
 
 
 def _load_mood_history() -> list[int]:
@@ -49,6 +51,18 @@ def _save_mood_history(mood: int) -> None:
     history = _load_mood_history()
     history.insert(0, mood)
     MOOD_HISTORY.write_text(json.dumps(history[:MOOD_NO_REPEAT]))
+
+
+def _load_template_history() -> list[str]:
+    if TEMPLATE_HISTORY.exists():
+        return json.loads(TEMPLATE_HISTORY.read_text())
+    return []
+
+
+def _save_template_history(name: str) -> None:
+    history = _load_template_history()
+    history.insert(0, name)
+    TEMPLATE_HISTORY.write_text(json.dumps(history[:TEMPLATE_NO_REPEAT]))
 
 
 def _pick_mood() -> int:
@@ -81,7 +95,13 @@ def _pick_template(mood_number: int) -> Image.Image:
         print(f"  No templates found — using gradient background")
         return make_gradient_bg(mood_number)
 
-    chosen = random.choice(candidates)
+    history  = _load_template_history()
+    excluded = set(history[:TEMPLATE_NO_REPEAT])
+    pool     = [c for c in candidates if c.name not in excluded]
+    if not pool:
+        pool = candidates
+    chosen = random.choice(pool)
+    _save_template_history(chosen.name)
     print(f"  Template : {chosen.name}")
     return Image.open(chosen).convert("RGB")
 
