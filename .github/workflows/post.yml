@@ -2,7 +2,7 @@ name: Post to Instagram
 
 on:
   schedule:
-    - cron: '0 * * * *'  # every 1 hour
+    - cron: '*/30 * * * *'  # every 30 minutes
   workflow_dispatch:        # manual trigger from GitHub UI
 
 jobs:
@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v5
         with:
@@ -43,3 +45,11 @@ jobs:
           CLOUDINARY_API_KEY:       ${{ secrets.CLOUDINARYKEY }}
           CLOUDINARY_API_SECRET:    ${{ secrets.CLOUDINARYSECRET }}
         run: python main.py --once
+
+      - name: Save history files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add mood_history.json music_history.json template_history.json || true
+          git diff --cached --quiet || git commit -m "chore: update history after run [skip ci]"
+          git push
