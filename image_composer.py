@@ -33,7 +33,7 @@ def _draw_quote(d: ImageDraw.ImageDraw, quote: str, accent: tuple) -> None:
     lines = [" ".join(words[i:i+3]) for i in range(0, len(words), 3)]
 
     line_h = 95
-    start_y = int(CANVAS[1] * 0.25)
+    start_y = int(CANVAS[1] * 0.18)
 
     for line in lines:
         bbox = d.textbbox((0, 0), line, font=font)
