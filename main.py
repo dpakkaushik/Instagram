@@ -7,6 +7,7 @@ Usage:
   python main.py --dry    # generate everything, skip posting
 """
 
+import json
 import random
 import sys
 import time
@@ -33,11 +34,32 @@ DRY_RUN = "--dry" in sys.argv
 REEL_DURATION = 10.0   # seconds — single image Reel
 
 
-TOTAL_MOODS = 10
+TOTAL_MOODS   = 10
+MOOD_HISTORY  = Path("mood_history.json")
+MOOD_NO_REPEAT = 3  # how many recent moods to avoid
+
+
+def _load_mood_history() -> list[int]:
+    if MOOD_HISTORY.exists():
+        return json.loads(MOOD_HISTORY.read_text())
+    return []
+
+
+def _save_mood_history(mood: int) -> None:
+    history = _load_mood_history()
+    history.insert(0, mood)
+    MOOD_HISTORY.write_text(json.dumps(history[:MOOD_NO_REPEAT]))
 
 
 def _pick_mood() -> int:
-    return random.randint(1, TOTAL_MOODS)
+    history = _load_mood_history()
+    excluded = set(history[:MOOD_NO_REPEAT])
+    pool = [m for m in range(1, TOTAL_MOODS + 1) if m not in excluded]
+    if not pool:
+        pool = list(range(1, TOTAL_MOODS + 1))
+    mood = random.choice(pool)
+    _save_mood_history(mood)
+    return mood
 
 
 def _pick_template(mood_number: int) -> Image.Image:
