@@ -19,7 +19,7 @@ def _parse_quote_json(raw: str, source: str) -> dict:
     raw = re.sub(r"^```[a-z]*\n?", "", raw).strip()
     raw = re.sub(r"\n?```$", "", raw).strip()
     data = json.loads(raw)
-    required = {"mood_number", "mood_name", "quote", "caption", "hashtags", "visual_theme"}
+    required = {"mood_number", "mood_name", "quote", "caption", "hashtags", "search_keyword", "alt_text"}
     missing = required - data.keys()
     if missing:
         raise ValueError(f"[{source}] Missing fields: {missing} | Raw: {raw[:200]}")
@@ -27,10 +27,14 @@ def _parse_quote_json(raw: str, source: str) -> dict:
     return data
 
 
-def generate_carousel(category: str) -> dict:
-    """Generate 4-slide quote. Tries Gemini 2.5 Flash first, falls back to Groq."""
+def generate_carousel(mood_number: int, template_description: str = "") -> dict:
+    """Generate quote for a given mood. Tries Gemini 2.5 Flash first, falls back to Groq."""
     base_prompt = QUOTE_PROMPT_FILE.read_text().strip()
-    full_prompt = f"Category / mood for today: {category}\n\n{base_prompt}"
+    full_prompt = (
+        f"mood_number: {mood_number}\n"
+        f"template_description: {template_description or 'not provided'}\n\n"
+        f"{base_prompt}"
+    )
 
     # Primary: Gemini 2.5 Flash
     print(f"  [gemini] Calling {GEMINI_TEXT_MODEL}...")

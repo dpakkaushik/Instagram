@@ -17,7 +17,7 @@ from pathlib import Path
 import schedule
 from PIL import Image
 
-from config import QUOTE_CATEGORY, POST_INTERVAL_HOURS
+from config import POST_INTERVAL_HOURS
 from gemini_processor import generate_carousel
 from image_composer import compose_card, make_gradient_bg
 from video_composer import compose_reel
@@ -33,13 +33,11 @@ DRY_RUN = "--dry" in sys.argv
 REEL_DURATION = 10.0   # seconds — single image Reel
 
 
-def _pick_category() -> str:
-    categories = [c.strip() for c in QUOTE_CATEGORY.split(",") if c.strip()]
-    if len(categories) <= 1:
-        return QUOTE_CATEGORY.strip()
-    now = datetime.now()
-    idx = (now.hour * 4 + now.minute // 15) % len(categories)
-    return categories[idx]
+TOTAL_MOODS = 10
+
+
+def _pick_mood() -> int:
+    return random.randint(1, TOTAL_MOODS)
 
 
 def _pick_template(mood_number: int) -> Image.Image:
@@ -67,27 +65,25 @@ def _pick_template(mood_number: int) -> Image.Image:
 
 
 def run_pipeline() -> None:
-    ts       = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    run_id   = datetime.now().strftime("%Y%m%d_%H%M%S")
-    category = _pick_category()
+    ts      = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    run_id  = datetime.now().strftime("%Y%m%d_%H%M%S")
+    mood_number = _pick_mood()
 
     print(f"\n{'='*60}")
     print(f"  Instagram Reel Pipeline — {ts}")
-    print(f"  Category: {category}  |  Dry run: {DRY_RUN}")
+    print(f"  Mood: #{mood_number}  |  Dry run: {DRY_RUN}")
     print(f"{'='*60}")
 
     try:
-        # ── STEP 1: Generate quote ────────────────────────────────────
-        print("\n[1/4] Generating quote...")
-        data = generate_carousel(category)
-        mood_number = data["mood_number"]
-        quote       = data["quote"]
+        # ── STEP 1: Pick template + generate quote ────────────────────
+        print(f"\n[1/4] Picking Mood {mood_number} template...")
+        bg_image = _pick_template(mood_number)
+
+        print("\n[2/4] Generating quote...")
+        data = generate_carousel(mood_number)
+        quote = data["quote"]
         print(f"  Mood #{mood_number} : {data.get('mood_name', '')}")
         print(f"  Quote    : {quote}")
-
-        # ── STEP 2: Pick template image ───────────────────────────────
-        print(f"\n[2/4] Picking Mood {mood_number} template...")
-        bg_image = _pick_template(mood_number)
 
         # ── STEP 3: Compose card ──────────────────────────────────────
         print("\n[3/4] Composing card...")
