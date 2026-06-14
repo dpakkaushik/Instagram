@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-CANVAS = (1080, 1350)   # 4:5 portrait
+CANVAS = (1080, 1920)   # 9:16 portrait — Instagram Reels
 FONT_DIR = Path(__file__).parent / "fonts"
 
 CATEGORY_COLORS: dict[str, tuple] = {
@@ -85,7 +85,14 @@ def compose_card(
 ) -> Image.Image:
     accent = MOOD_COLORS.get(mood_number, DEFAULT_ACCENT)
 
-    canvas = bg_image.resize(CANVAS, Image.LANCZOS).convert("RGBA")
+    # Cover + centre-crop to preserve aspect ratio (no stretch)
+    src_w, src_h = bg_image.size
+    scale = max(CANVAS[0] / src_w, CANVAS[1] / src_h)
+    new_w, new_h = int(src_w * scale), int(src_h * scale)
+    resized = bg_image.resize((new_w, new_h), Image.LANCZOS)
+    left = (new_w - CANVAS[0]) // 2
+    top  = (new_h - CANVAS[1]) // 2
+    canvas = resized.crop((left, top, left + CANVAS[0], top + CANVAS[1])).convert("RGBA")
 
     d = ImageDraw.Draw(canvas)
     _draw_quote(d, quote, accent)
